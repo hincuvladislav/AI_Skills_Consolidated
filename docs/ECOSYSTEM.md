@@ -40,29 +40,15 @@ is, and what to watch in the ecosystem.
    (11.9%, "ClawHavoc" campaign, Atomic Stealer); Snyk "ToxicSkills": 36.82% of
    scanned skills had ≥1 security flaw (2.6% prompt injection), and one community
    "skill scanner" was itself malware. Policy here: **pinned sources only**
-   (`sources.lock.json`), no open contributions, review before adding a source, and
+   (pins in `MAINTAINERS.md`), no open contributions, review before adding a source, and
    prefer LLM-intent analysis over regex if scanning is ever automated.
 
-## Sources ingested (all pinned in `sources.lock.json`)
+## Sources & candidates
 
-| Source | License | What we take |
-|---|---|---|
-| alirezarezvani/claude-skills | MIT | broad library (largest share) |
-| mattpocock/skills | MIT | engineering workflow set (`workflow/`); wins dedup ties as original author |
-| obra/superpowers | MIT | 14 methodology skills (`methodology/`) — highest-starred community collection |
-| anthropics/skills | Apache-2.0 **per-skill** | ONLY skill-creator, mcp-builder, webapp-testing, claude-api, frontend-design. The docx/pdf/pptx/xlsx skills are **source-available, not open source → never ingest** |
-
-## Evaluated, not (yet) ingested
-
-- **vercel-labs/agent-skills** (3 of the global top-10 most-installed skills) — **no
-  license file**; redistribution not automatically permitted. Revisit if licensed.
-- Vendor-official stacks, add on demand: cloudflare/skills (Apache-2.0),
-  supabase/agent-skills (MIT), expo/skills (MIT), Kotlin/kotlin-agent-skills
-  (Apache-2.0), antfu/skills (MIT, Vue/Vite), K-Dense-AI/scientific-agent-skills
-  (MIT, 140 scientific skills).
-- **sickn33/agentic-awesome-skills** (1,900+ claimed) — unaudited mega-library;
-  contradicts the curation policy. Not ingested.
-- Discovery feed: VoltAgent/awesome-agent-skills (best-maintained awesome-list).
+Input repositories, license mapping, pinned commits, ingestion scope, and the
+evaluated-but-not-ingested candidate list live in the maintainers-only provenance
+file: [`MAINTAINERS.md`](../MAINTAINERS.md). Everywhere else in the repo, inputs
+are referenced by opaque ids (s1..s4, local).
 
 ## Quality tooling adopted / available
 
@@ -82,4 +68,4 @@ is, and what to watch in the ecosystem.
 2. `python3 tools/consolidate.py` (updates skills/, indexes, lockfile, decision log).
 3. `python3 tools/validate_skills.py --quiet` — investigate new errors.
 4. Re-index Qdrant: `tools/index_skills.py --recreate`.
-5. Commit with the updated `sources.lock.json` SHAs in the message.
+5. Commit; the refreshed pins land in `MAINTAINERS.md` automatically.

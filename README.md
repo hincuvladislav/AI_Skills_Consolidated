@@ -155,7 +155,8 @@ Three ways, fastest first:
 ## Repository structure
 
 ```
-skills/<category>/<skill>/    # 334 skill units — the library itself
+skills/<category>/<skill>/    # the library itself (rebuilt by tools/consolidate.py)
+local-skills/                 # library-authored skills (source of truth, survive rebuilds)
 agents/                       # 99 role personas
 commands/                     # slash-command definitions
 standards/                    # process standards
@@ -163,7 +164,7 @@ templates/                    # authoring templates
 docs/                         # authoring standard, conventions, ecosystem notes
 tools/                        # validate / index / search / consolidate
 skills-index.json             # machine-readable catalog
-sources.lock.json             # provenance pinning (maintainers)
+MAINTAINERS.md                # provenance & source management (maintainers)
 CONSOLIDATION.md              # curation decision log (maintainers)
 LICENSES/                     # third-party license notices — keep when redistributing
 ```
