@@ -1,75 +1,190 @@
 # AI Skills Consolidated
 
-A **deduplicated, single-tree** consolidation of four agent-skills sources, restructured
-per current skill-repo best practices (one dir per skill unit, machine-readable index,
-progressive disclosure: `SKILL.md` ≤500 lines + `scripts/` + `references/` + `assets/`).
+A curated library of **334 agent skills** across **16 domains** — reusable expertise
+packages that give AI coding agents (Claude Code, Codex, Cursor, Gemini CLI, and any
+other agent that reads `SKILL.md` files) structured workflows, domain knowledge, and
+executable tools they don't have out of the box.
 
-| Source | License | Contribution |
-|---|---|---|
-| [alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) v2.9.0 (via fork) | MIT © 2025 Alireza Rezvani | broad library (engineering → C-level) |
-| [mattpocock/skills](https://github.com/mattpocock/skills) | MIT © 2026 Matt Pocock | composable engineering-workflow set (`workflow/`) |
-| [obra/superpowers](https://github.com/obra/superpowers) | MIT | 14 methodology skills (`methodology/`): TDD, systematic-debugging, writing-plans, subagent-driven-development, … |
-| [anthropics/skills](https://github.com/anthropics/skills) | Apache-2.0 (per-skill) | official picks: skill-creator, mcp-builder, webapp-testing, claude-api, frontend-design |
-
-All sources are **pinned to commit SHAs** in [`sources.lock.json`](sources.lock.json)
-(supply-chain policy: see [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md)).
-
-**334 skill units · 16 categories.** Duplicates resolved
-skill-by-skill — every decision is logged in [`CONSOLIDATION.md`](CONSOLIDATION.md)
-(rules: byte-identical dedup; stale forks dropped in favor of the original author's
-current version; same-name-different-skill kept in separate categories; composite
-skills kept intact).
-
-## Layout
+Every skill follows the open [agentskills.io](https://agentskills.io/specification)
+convention:
 
 ```
-skills/<category>/<unit>/     # one dir per skill unit (SKILL.md [+ scripts|references|assets])
-    engineering/  workflow/  product/  research/  research-ops/  project-management/
-    productivity/ business/  marketing/ finance/  compliance/  c-level/  ra-qm/
-    documents/    misc/
+skill-name/
+├── SKILL.md        # YAML frontmatter (name + description) + instructions, ≤500 lines
+├── scripts/        # executable CLI tools (Python, stdlib-only)
+├── references/     # deeper knowledge, loaded only when needed
+└── assets/         # templates and samples
+```
+
+**223 of the 334 skills ship executable tools** — linters, scorers, generators — all
+plain Python with zero external dependencies, so they run anywhere Python runs.
+
+---
+
+## What's inside
+
+| Category | Skills | What it covers |
+|---|---|---|
+| `engineering/` | 107 | code review, API design, testing, security, architecture, DevOps, observability, anti-hallucination coding disciplines |
+| `marketing/` | 49 | campaigns, SEO/AEO, analytics, content, brand |
+| `c-level/` | 36 | CEO/CFO/CTO/CISO/CMO-level advisory personas |
+| `business/` | 20 | growth, operations, commercial |
+| `ra-qm/` | 19 | regulatory affairs & quality management |
+| `product/` | 17 | PRDs, prioritization, product-owner toolkits |
+| `workflow/` | 17 | the delivery loop: spec → tickets → implement → review → triage → debug |
+| `methodology/` | 14 | engineering discipline: TDD, systematic debugging, plan writing & execution, verification before completion |
+| `productivity/` | 10 | capture, teach, handoff, grilling sessions |
+| `research/` | 9 | deep research, literature review, competitive intel |
+| `project-management/` | 9 | planning, estimation, status reporting |
+| `compliance/` | 9 | AI-act readiness, audits, governance |
+| `research-ops/` | 5 | clinical/market/product research operations |
+| `documents/` | 5 | Markdown/HTML document production |
+| `finance/` | 4 | budgeting, investment analysis |
+| `misc/` | 4 | odds and ends (git guardrails, pre-commit setup, …) |
+
+Plus, outside `skills/`:
+
+- **`agents/`** — 99 role personas (backend engineer, senior architect, adversarial
+  reviewer, …) that pair with skills
+- **`commands/`** — slash-command definitions for Claude Code
+- **`standards/`** — process standards (communication, quality, git, documentation, security)
+- **`templates/`**, **`docs/`** — authoring templates, the skill-authoring standard, and
+  ecosystem/maintenance notes
+- **`skills-index.json`** — machine-readable catalog of every skill (name, category,
+  path, description, tooling flags)
+
+---
+
+## Quick start
+
+### 1. Get the repo
+
+```bash
+git clone https://github.com/hincuvladislav/AI_Skills_Consolidated.git
+cd AI_Skills_Consolidated
+```
+
+### 2. Install skills into your agent
+
+> **⚠ Install per-domain, not everything.** Agents cap how many skill descriptions
+> they can hold (Claude Code caps the listing at ~1% of context) — past ~20-25
+> installed skills, the least-used ones silently stop auto-triggering. Pick the
+> categories you actually work in; use the search below for everything else.
+
+**Claude Code** — copy the skill dirs you want into a skills location:
+
+```bash
+# per-project
+mkdir -p .claude/skills
+cp -R skills/methodology/systematic-debugging .claude/skills/
+
+# or user-wide
+cp -R skills/workflow/code-review ~/.claude/skills/
+```
+
+**Codex / Cursor / Copilot / Gemini CLI / Goose / OpenCode** — these all honor the
+vendor-neutral path:
+
+```bash
+mkdir -p ~/.agents/skills          # or $REPO_ROOT/.agents/skills per-project
+cp -R skills/engineering/api-design-reviewer ~/.agents/skills/
+```
+
+**Any other agent** — a skill is just a folder; point your agent at the skill's
+`SKILL.md` (paste it into context if the agent has no skill mechanism) and its
+`scripts/` tools run standalone:
+
+```bash
+python3 skills/engineering/api-design-reviewer/scripts/api_linter.py --help
+```
+
+### 3. Use a skill
+
+Skills auto-trigger when your request matches their description ("review this PR",
+"debug this", "write a spec"). You can also invoke explicitly — e.g. in Claude Code
+mention the skill by name, or run its bundled tools directly from the shell.
+
+---
+
+## Finding the right skill
+
+Three ways, fastest first:
+
+1. **Browse the catalog** — `skills-index.json` has every skill's name, category and
+   description; or just explore `skills/<category>/`.
+2. **Keyword search:**
+   ```bash
+   grep -ril "merge conflict" skills --include=SKILL.md
+   ```
+3. **Semantic search** (optional, requires a local [Qdrant](https://qdrant.tech)
+   instance + an OpenAI API key for embeddings):
+   ```bash
+   # one-time: build the vector index
+   python3 tools/index_skills.py --recreate
+   # then search by intent, not keywords
+   tools/search_skills.sh "verify my change actually works before finishing"
+   ```
+   Configure via env: `QDRANT_HOST` / `QDRANT_PORT` (default `localhost:6357`),
+   `OPENAI_API_KEY`. Requires `pip install qdrant-client openai python-dotenv`.
+
+---
+
+## Recommended starter sets
+
+| If you are… | Install these |
+|---|---|
+| A developer using an AI agent daily | `workflow/` (all 17) — the full delivery loop: `to-spec`, `to-tickets`, `implement`, `code-review`, `triage`, `diagnosing-bugs`, `wayfinder` |
+| Focused on code quality | `methodology/test-driven-development`, `methodology/systematic-debugging`, `methodology/verification-before-completion`, `engineering/adversarial-reviewer`, `engineering/dependency-auditor` |
+| Building APIs | `engineering/api-design-reviewer`, `engineering/api-test-suite-builder`, `engineering/strict-api` |
+| Shipping to production | `engineering/ship-gate`, `engineering/slo-architect`, `engineering/observability-designer`, `engineering/security-guidance` |
+| Writing your own skills | `engineering/skill-creator` (includes an eval harness), `engineering/write-a-skill`, `methodology/writing-skills`, plus `docs/SKILL-AUTHORING-STANDARD.md` |
+
+---
+
+## Tools
+
+| Tool | Purpose |
+|---|---|
+| `tools/validate_skills.py [--strict] [--quiet]` | Lint every skill against the agentskills.io spec (name==dir, name format, description ≤1024 chars, body <500 lines / <5k tokens, frontmatter fields) |
+| `tools/index_skills.py [--recreate]` | Build/refresh the semantic-search index (Qdrant collection `skills`) |
+| `tools/search_skills.sh "<query>" [n]` | Semantic search over all skills |
+| `tools/consolidate.py` | Maintainer tool: rebuilds `skills/`, `skills-index.json` and the decision log from configured sources |
+
+---
+
+## Repository structure
+
+```
+skills/<category>/<skill>/    # 334 skill units — the library itself
 agents/                       # 99 role personas
 commands/                     # slash-command definitions
-standards/                    # process standards (communication, quality, git, docs, security)
-templates/  docs/             # authoring standard & conventions
-tools/                        # consolidation, Qdrant indexing, semantic search
-skills-index.json             # machine-readable catalog: name·category·path·source·description
-CONSOLIDATION.md              # dedup decision log
-LICENSES/                     # upstream MIT notices (keep when redistributing)
+standards/                    # process standards
+templates/                    # authoring templates
+docs/                         # authoring standard, conventions, ecosystem notes
+tools/                        # validate / index / search / consolidate
+skills-index.json             # machine-readable catalog
+sources.lock.json             # provenance pinning (maintainers)
+CONSOLIDATION.md              # curation decision log (maintainers)
+LICENSES/                     # third-party license notices — keep when redistributing
 ```
 
-Notes: `workflow/` is the mattpocock engineering set kept coherent (to-spec, to-tickets,
-implement, code-review, triage, wayfinder, tdd, diagnosing-bugs, domain-modeling, …).
-His `deprecated/`, `in-progress/`, `personal/` dirs were excluded by policy.
+## Conventions & guarantees
 
-> **⚠ Don't install all 334 units into one agent.** Claude Code caps skill-listing
-> descriptions at ~1% of context; on overflow, least-used skills silently stop
-> auto-triggering. Install per-domain and use the semantic search below for
-> discovery (`docs/ECOSYSTEM.md` §curation explains the evidence).
+- **One skill = one folder.** Nothing outside a skill's folder is needed to use it
+  (except the optional shared search tooling).
+- **Composite skills** (7 of them, e.g. `engineering/playwright-pro`) bundle several
+  sub-skills under one unit — install the whole folder.
+- **Scripts are stdlib-only Python** (one documented exception:
+  `engineering/universal-scraping-architect` declares its deps in its own
+  requirements.txt).
+- **Descriptions are the discovery surface** — every skill states what it does and
+  when to trigger it in frontmatter, per the
+  [authoring standard](docs/SKILL-AUTHORING-STANDARD.md).
+- **Provenance is pinned** — the library is rebuilt only from reviewed, SHA-pinned
+  inputs; no open contribution pipeline, no unreviewed skill ever lands here.
 
-## Finding a skill
+## Licensing
 
-- **Catalog:** `skills-index.json` (or browse `skills/<category>/`)
-- **Keyword:** `grep -ril "<topic>" skills --include=SKILL.md`
-- **Semantic:** `tools/search_skills.sh "<what you're trying to do>"` — queries the
-  local Qdrant collection `skills` (localhost:6357, machine-local)
+Individual skills retain their original licenses (MIT / Apache-2.0). The notices in
+`LICENSES/` and per-skill `LICENSE.txt` files must be preserved when redistributing.
 
-## Maintenance
-
-- **Refresh from sources:** pull the source clones (`~/.claude/claude-skills`,
-  `~/.claude/mattpocock-skills`), then `python3 tools/consolidate.py` (rebuilds
-  `skills/`, `skills-index.json`, `CONSOLIDATION.md`; source paths overridable via
-  `SRC_CLAUDE_SKILLS` / `SRC_MP_SKILLS`).
-- **Validate:** `python3 tools/validate_skills.py [--strict] [--quiet]` — checks the
-  agentskills.io spec + Anthropic constraints (name==dir, description ≤1024 chars,
-  <500 lines / <5k tokens, non-spec frontmatter).
-- **Re-index:** `<agents-venv-python> tools/index_skills.py --recreate`
-  (uses OpenAI `text-embedding-3-small`; key read from env or the Agents
-  infrastructure `.env`).
-- **Ecosystem watch & ingestion policy:** [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md).
-
-## Skill format
-
-agentskills.io convention — YAML frontmatter (`name`, `description` with trigger
-phrases) + markdown body; bundled Python tools are stdlib-only (single documented
-exception: `engineering/universal-scraping-architect`, deps declared in its
-requirements.txt). Authoring guide: `docs/SKILL-AUTHORING-STANDARD.md`.
