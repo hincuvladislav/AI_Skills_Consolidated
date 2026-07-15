@@ -87,6 +87,11 @@ S1_SKIP_UNIT_PATHS = {"engineering/handoff", "productivity/handoff"}
 FIXTURE_UNITS = {"sample-skill"}
 # Meta-skills only meaningful inside their home plugin -> excluded
 HOME_PLUGIN_META = {"using-superpowers"}
+# Neutral renames (applied to unit dirs, frontmatter names, and all cross-references)
+RENAMES = {
+    "setup-matt-pocock-skills": "setup-workflow-skills",
+    "ask-matt": "which-skill",
+}
 
 ORIGINAL_AUTHOR_ORDER = {"local": 0, "s2": 1, "s3": 2, "s4": 3, "s1": 4}
 
@@ -196,6 +201,9 @@ def main():
         rel_unit = f'{u["source"]}/{u["root"].relative_to(u["src_root"])}'
         src_rel = str(u["root"].relative_to(u["src_root"]))
         name, cat, src = u["name"], u["category"], u["source"]
+        if name in RENAMES:
+            log.append(f"- RENAME `{rel_unit}` -> `{cat}/{RENAMES[name]}` — neutral naming policy")
+            name = RENAMES[name]
 
         if name in FIXTURE_UNITS:
             log.append(f"- SKIP `{rel_unit}` — upstream test fixture, not a skill")
@@ -231,6 +239,8 @@ def main():
             log.append(f"- KEEP BOTH `{cat}/{name}` and `{prior[0][0]}/{name}` — same name, different skills (R3)")
         taken[(cat, name)] = u
         n, d = fm(u["skill_mds"][0].read_text(errors="replace"))
+        for old, new in RENAMES.items():
+            n, d = n.replace(old, new), d.replace(old, new)
         index.append({
             "name": n or name, "category": cat, "path": f"skills/{cat}/{name}",
             "source": src, "description": d,
@@ -261,6 +271,15 @@ def main():
         if src_lic.exists():
             shutil.copy2(src_lic, lic / f"LICENSE-{sid}")
     # s4 skills carry per-skill LICENSE.txt, retained by copytree
+
+    # rewrite renamed skill references across all copied markdown
+    for md in OUT_SKILLS.rglob("*.md"):
+        text = md.read_text(errors="replace")
+        new_text = text
+        for old, new in RENAMES.items():
+            new_text = new_text.replace(old, new)
+        if new_text != text:
+            md.write_text(new_text)
 
     write_pins()
 

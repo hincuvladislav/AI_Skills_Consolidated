@@ -3170,16 +3170,6 @@
     "has_scripts": false
   },
   {
-    "name": "ask-matt",
-    "category": "workflow",
-    "path": "skills/workflow/ask-matt",
-    "source": "s2",
-    "description": "Ask which skill or flow fits your situation. A router over the skills in this repo.",
-    "composite": false,
-    "sub_skills": 1,
-    "has_scripts": false
-  },
-  {
     "name": "code-review",
     "category": "workflow",
     "path": "skills/workflow/code-review",
@@ -3280,9 +3270,9 @@
     "has_scripts": false
   },
   {
-    "name": "setup-matt-pocock-skills",
+    "name": "setup-workflow-skills",
     "category": "workflow",
-    "path": "skills/workflow/setup-matt-pocock-skills",
+    "path": "skills/workflow/setup-workflow-skills",
     "source": "s2",
     "description": "Configure this repo for the engineering skills \u2014 set up its issue tracker, triage label vocabulary, and domain doc layout. Run once before first use of the other engineering skills.",
     "composite": false,
@@ -3335,6 +3325,16 @@
     "path": "skills/workflow/wayfinder",
     "source": "s2",
     "description": "Plan a huge chunk of work \u2014 more than one agent session can hold \u2014 as a shared map of decision tickets on your issue tracker, and resolve them one at a time until the way to the destination is clear.",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
+    "name": "which-skill",
+    "category": "workflow",
+    "path": "skills/workflow/which-skill",
+    "source": "s2",
+    "description": "Ask which skill or flow fits your situation. A router over the skills in this repo.",
     "composite": false,
     "sub_skills": 1,
     "has_scripts": false

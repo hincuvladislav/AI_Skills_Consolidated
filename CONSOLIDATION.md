@@ -7,6 +7,8 @@ Input ids (s1..s4, local) are resolved in `MAINTAINERS.md` (maintainers-only pro
 ## Decisions
 
 - KEEP BOTH `research/research` and `workflow/research` — same name, different skills (R3)
+- RENAME `s2/skills/engineering/ask-matt` -> `workflow/which-skill` — neutral naming policy
+- RENAME `s2/skills/engineering/setup-matt-pocock-skills` -> `workflow/setup-workflow-skills` — neutral naming policy
 - SKIP `s1/c-level-advisor/skills/arquiteto-de-empresa` — byte-identical to kept `c-level/arquiteto-de-empresa` (R1)
 - SKIP `s1/c-level-advisor/skills/chief-ai-officer-advisor` — byte-identical to kept `c-level/chief-ai-officer-advisor` (R1)
 - SKIP `s1/c-level-advisor/skills/chief-customer-officer-advisor` — byte-identical to kept `c-level/chief-customer-officer-advisor` (R1)
