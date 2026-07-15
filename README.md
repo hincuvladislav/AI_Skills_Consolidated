@@ -1,15 +1,20 @@
 # AI Skills Consolidated
 
-A **deduplicated, single-tree** consolidation of two agent-skills libraries, restructured
+A **deduplicated, single-tree** consolidation of four agent-skills sources, restructured
 per current skill-repo best practices (one dir per skill unit, machine-readable index,
 progressive disclosure: `SKILL.md` ≤500 lines + `scripts/` + `references/` + `assets/`).
 
 | Source | License | Contribution |
 |---|---|---|
 | [alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) v2.9.0 (via fork) | MIT © 2025 Alireza Rezvani | broad library (engineering → C-level) |
-| [mattpocock/skills](https://github.com/mattpocock/skills) | MIT © 2026 Matt Pocock | composable engineering-workflow set |
+| [mattpocock/skills](https://github.com/mattpocock/skills) | MIT © 2026 Matt Pocock | composable engineering-workflow set (`workflow/`) |
+| [obra/superpowers](https://github.com/obra/superpowers) | MIT | 14 methodology skills (`methodology/`): TDD, systematic-debugging, writing-plans, subagent-driven-development, … |
+| [anthropics/skills](https://github.com/anthropics/skills) | Apache-2.0 (per-skill) | official picks: skill-creator, mcp-builder, webapp-testing, claude-api, frontend-design |
 
-**316 skill units · 370 SKILL.md files · 15 categories.** Duplicates resolved
+All sources are **pinned to commit SHAs** in [`sources.lock.json`](sources.lock.json)
+(supply-chain policy: see [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md)).
+
+**334 skill units · 16 categories.** Duplicates resolved
 skill-by-skill — every decision is logged in [`CONSOLIDATION.md`](CONSOLIDATION.md)
 (rules: byte-identical dedup; stale forks dropped in favor of the original author's
 current version; same-name-different-skill kept in separate categories; composite
@@ -36,6 +41,11 @@ Notes: `workflow/` is the mattpocock engineering set kept coherent (to-spec, to-
 implement, code-review, triage, wayfinder, tdd, diagnosing-bugs, domain-modeling, …).
 His `deprecated/`, `in-progress/`, `personal/` dirs were excluded by policy.
 
+> **⚠ Don't install all 334 units into one agent.** Claude Code caps skill-listing
+> descriptions at ~1% of context; on overflow, least-used skills silently stop
+> auto-triggering. Install per-domain and use the semantic search below for
+> discovery (`docs/ECOSYSTEM.md` §curation explains the evidence).
+
 ## Finding a skill
 
 - **Catalog:** `skills-index.json` (or browse `skills/<category>/`)
@@ -49,9 +59,13 @@ His `deprecated/`, `in-progress/`, `personal/` dirs were excluded by policy.
   `~/.claude/mattpocock-skills`), then `python3 tools/consolidate.py` (rebuilds
   `skills/`, `skills-index.json`, `CONSOLIDATION.md`; source paths overridable via
   `SRC_CLAUDE_SKILLS` / `SRC_MP_SKILLS`).
+- **Validate:** `python3 tools/validate_skills.py [--strict] [--quiet]` — checks the
+  agentskills.io spec + Anthropic constraints (name==dir, description ≤1024 chars,
+  <500 lines / <5k tokens, non-spec frontmatter).
 - **Re-index:** `<agents-venv-python> tools/index_skills.py --recreate`
   (uses OpenAI `text-embedding-3-small`; key read from env or the Agents
   infrastructure `.env`).
+- **Ecosystem watch & ingestion policy:** [`docs/ECOSYSTEM.md`](docs/ECOSYSTEM.md).
 
 ## Skill format
 

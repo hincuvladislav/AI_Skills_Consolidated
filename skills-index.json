@@ -890,6 +890,16 @@
     "has_scripts": true
   },
   {
+    "name": "claude-api",
+    "category": "engineering",
+    "path": "skills/engineering/claude-api",
+    "source": "anthropic-skills",
+    "description": "|-",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
     "name": "claude-coach",
     "category": "engineering",
     "path": "skills/engineering/claude-coach",
@@ -1090,6 +1100,16 @@
     "has_scripts": false
   },
   {
+    "name": "frontend-design",
+    "category": "engineering",
+    "path": "skills/engineering/frontend-design",
+    "source": "anthropic-skills",
+    "description": "Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults.",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
     "name": "full-page-screenshot",
     "category": "engineering",
     "path": "skills/engineering/full-page-screenshot",
@@ -1220,6 +1240,16 @@
     "has_scripts": false
   },
   {
+    "name": "mcp-builder",
+    "category": "engineering",
+    "path": "skills/engineering/mcp-builder",
+    "source": "anthropic-skills",
+    "description": "Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, whether in Python (FastMCP) or Node/TypeScript (MCP SDK).",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": true
+  },
+  {
     "name": "mcp-server-builder",
     "category": "engineering",
     "path": "skills/engineering/mcp-server-builder",
@@ -1345,16 +1375,6 @@
     "path": "skills/engineering/runbook-generator",
     "source": "claude-skills",
     "description": "Generate operational runbooks from a service name \u2014 deployment, incident response, maintenance, and rollback workflows. Templated structure customizable per environment. Use when documenting on-call procedures for a new service, standardizing incident response across teams, or producing runbooks before launching to production.",
-    "composite": false,
-    "sub_skills": 1,
-    "has_scripts": true
-  },
-  {
-    "name": "sample-skill",
-    "category": "engineering",
-    "path": "skills/engineering/sample-skill",
-    "source": "claude-skills",
-    "description": "",
     "composite": false,
     "sub_skills": 1,
     "has_scripts": true
@@ -1540,6 +1560,16 @@
     "has_scripts": true
   },
   {
+    "name": "skill-creator",
+    "category": "engineering",
+    "path": "skills/engineering/skill-creator",
+    "source": "anthropic-skills",
+    "description": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy.",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": true
+  },
+  {
     "name": "skill-security-auditor",
     "category": "engineering",
     "path": "skills/engineering/skill-security-auditor",
@@ -1695,6 +1725,16 @@
     "path": "skills/engineering/universal-scraping-architect",
     "source": "claude-skills",
     "description": "Use for web scraping, crawling, document extraction, API parsing, or building validation-heavy data pipelines using Firecrawl or local Python scripts.",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": true
+  },
+  {
+    "name": "webapp-testing",
+    "category": "engineering",
+    "path": "skills/engineering/webapp-testing",
+    "source": "anthropic-skills",
+    "description": "Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.",
     "composite": false,
     "sub_skills": 1,
     "has_scripts": true
@@ -2255,6 +2295,146 @@
     "path": "skills/marketing/youtube-full",
     "source": "claude-skills",
     "description": "Use when the user needs YouTube transcripts, video search, channel browsing, playlist extraction, or content monitoring. Trigger phrases: 'get the transcript for', 'search YouTube for', 'what are the latest videos on', 'list this playlist', 'monitor this channel', or any request involving a YouTube URL, video ID, or @handle. Do NOT use for downloading video or audio files, YouTube engagement data (likes, comments), or private/age-restricted videos.",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
+    "name": "brainstorming",
+    "category": "methodology",
+    "path": "skills/methodology/brainstorming",
+    "source": "superpowers",
+    "description": "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation.",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": true
+  },
+  {
+    "name": "dispatching-parallel-agents",
+    "category": "methodology",
+    "path": "skills/methodology/dispatching-parallel-agents",
+    "source": "superpowers",
+    "description": "Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
+    "name": "executing-plans",
+    "category": "methodology",
+    "path": "skills/methodology/executing-plans",
+    "source": "superpowers",
+    "description": "Use when you have a written implementation plan to execute in a separate session with review checkpoints",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
+    "name": "finishing-a-development-branch",
+    "category": "methodology",
+    "path": "skills/methodology/finishing-a-development-branch",
+    "source": "superpowers",
+    "description": "Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
+    "name": "receiving-code-review",
+    "category": "methodology",
+    "path": "skills/methodology/receiving-code-review",
+    "source": "superpowers",
+    "description": "Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
+    "name": "requesting-code-review",
+    "category": "methodology",
+    "path": "skills/methodology/requesting-code-review",
+    "source": "superpowers",
+    "description": "Use when completing tasks, implementing major features, or before merging to verify work meets requirements",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
+    "name": "subagent-driven-development",
+    "category": "methodology",
+    "path": "skills/methodology/subagent-driven-development",
+    "source": "superpowers",
+    "description": "Use when executing implementation plans with independent tasks in the current session",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": true
+  },
+  {
+    "name": "systematic-debugging",
+    "category": "methodology",
+    "path": "skills/methodology/systematic-debugging",
+    "source": "superpowers",
+    "description": "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
+    "name": "test-driven-development",
+    "category": "methodology",
+    "path": "skills/methodology/test-driven-development",
+    "source": "superpowers",
+    "description": "Use when implementing any feature or bugfix, before writing implementation code",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
+    "name": "using-git-worktrees",
+    "category": "methodology",
+    "path": "skills/methodology/using-git-worktrees",
+    "source": "superpowers",
+    "description": "Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
+    "name": "using-superpowers",
+    "category": "methodology",
+    "path": "skills/methodology/using-superpowers",
+    "source": "superpowers",
+    "description": "Use when starting any conversation - establishes how to find and use skills, requiring skill invocation before ANY response including clarifying questions",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
+    "name": "verification-before-completion",
+    "category": "methodology",
+    "path": "skills/methodology/verification-before-completion",
+    "source": "superpowers",
+    "description": "Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
+    "name": "writing-plans",
+    "category": "methodology",
+    "path": "skills/methodology/writing-plans",
+    "source": "superpowers",
+    "description": "Use when you have a spec or requirements for a multi-step task, before touching code",
+    "composite": false,
+    "sub_skills": 1,
+    "has_scripts": false
+  },
+  {
+    "name": "writing-skills",
+    "category": "methodology",
+    "path": "skills/methodology/writing-skills",
+    "source": "superpowers",
+    "description": "Use when creating new skills, editing existing skills, or verifying skills work before deployment",
     "composite": false,
     "sub_skills": 1,
     "has_scripts": false

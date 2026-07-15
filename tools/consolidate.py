@@ -1,37 +1,67 @@
 #!/usr/bin/env python3
 """
-True consolidation of vendor/claude-skills + vendor/mattpocock-skills into a single
-deduplicated, best-practice layout:
+True consolidation of multiple skill sources into a single deduplicated,
+best-practice layout:
 
     skills/<category>/<unit>/            one dir per skill unit (composites intact)
     agents/  commands/  standards/  templates/  docs/  tools/
     skills-index.json                    machine-readable catalog
+    sources.lock.json                    source repos pinned to commit SHAs
     CONSOLIDATION.md                     per-decision log (kept/skipped/why)
+
+Sources (override paths via env):
+    SRC_CLAUDE_SKILLS     alirezarezvani/claude-skills fork          (MIT)
+    SRC_MP_SKILLS         mattpocock/skills                          (MIT)
+    SRC_SUPERPOWERS       obra/superpowers                           (MIT)
+    SRC_ANTHROPIC_SKILLS  anthropics/skills (Apache-2.0 picks only)
 
 Dedup rules:
   R1  Same unit name, SKILL.md byte-identical  -> keep one copy
-      (prefer mattpocock original for his set, else the richer dir).
-  R2  Known stale forks of mattpocock originals inside claude-skills
-      (grill-me, grill-with-docs) -> keep mattpocock's current version.
-  R3  Same name but genuinely different skills (research, handoff) -> keep both in
-      different categories; collision recorded in the index.
-  R4  Sub-skills of different composites sharing names (init/run/status) -> no
-      conflict: composites are kept as single units.
+      (prefer the original author's copy, else the richer dir).
+  R2  Stale forks of original-author skills inside claude-skills -> keep the
+      original author's current version.
+  R3  Same name but genuinely different skills -> keep both in different
+      categories; collision recorded in the index.
+  R4  Sub-skills of different composites sharing names -> no conflict:
+      composites are kept as single units.
 
 Run:  python3 tools/consolidate.py   (from the repo root)
 """
 
 import hashlib
-import os
 import json
+import os
 import re
 import shutil
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-VENDOR_CS = Path(os.getenv("SRC_CLAUDE_SKILLS", str(Path.home() / ".claude" / "claude-skills")))
-VENDOR_MP = Path(os.getenv("SRC_MP_SKILLS", str(Path.home() / ".claude" / "mattpocock-skills")))
+HOME = Path.home()
+VENDOR_CS = Path(os.getenv("SRC_CLAUDE_SKILLS", str(HOME / ".claude" / "claude-skills")))
+VENDOR_MP = Path(os.getenv("SRC_MP_SKILLS", str(HOME / ".claude" / "mattpocock-skills")))
 OUT_SKILLS = ROOT / "skills"
+
+# Flat `skills/<name>/` sources added 2026-07-14 after the ecosystem research
+# (docs/ECOSYSTEM.md): superpowers = methodology layer; anthropics picks are the
+# Apache-2.0 engineering skills only (the docx/pdf/pptx/xlsx skills are
+# source-available, NOT open source -> never ingest them).
+EXTRA_SOURCES = [
+    {
+        "source": "superpowers",
+        "root": Path(os.getenv("SRC_SUPERPOWERS", str(HOME / ".claude" / "superpowers"))),
+        "category": "methodology",
+        "include": None,  # all
+        "license": "MIT",
+    },
+    {
+        "source": "anthropic-skills",
+        "root": Path(os.getenv("SRC_ANTHROPIC_SKILLS", str(HOME / ".claude" / "anthropic-skills"))),
+        "category": "engineering",
+        "include": {"skill-creator", "mcp-builder", "webapp-testing", "claude-api", "frontend-design"},
+        "license": "Apache-2.0 (per-skill LICENSE.txt)",
+    },
+]
 
 CS_CATEGORY_MAP = {
     "engineering": "engineering",
@@ -58,9 +88,10 @@ MP_SKIP_DIRS = {"deprecated", "in-progress", "personal"}
 
 # R2: claude-skills units that are stale copies of mattpocock originals -> skip
 CS_STALE_FORKS = {"grill-me", "grill-with-docs"}
-# R3: claude-skills engineering/handoff is an older small variant; productivity/handoff
-# is a distinct rich skill. Skip only the engineering one.
-CS_SKIP_UNIT_PATHS = {"engineering/handoff"}
+# Test fixtures shipped by upstream, not real skills
+FIXTURE_UNITS = {"sample-skill"}
+# R2: both claude-skills handoff variants are expanded forks of mattpocock's handoff
+CS_SKIP_UNIT_PATHS = {"engineering/handoff", "productivity/handoff"}
 
 
 def fm(text):
@@ -76,14 +107,9 @@ def fm(text):
 
 
 def unit_for(skill_md: Path, vendor_root: Path):
-    """Return (unit_root, unit_name) for a SKILL.md path."""
+    """Return (unit_root, unit_name) for a claude-skills SKILL.md path."""
     rel = skill_md.relative_to(vendor_root)
     parts = rel.parts
-    # claude-skills layouts:
-    #   <cat>/skills/<name>/SKILL.md            -> standalone
-    #   <cat>/<plugin>/skills/<name>/SKILL.md   -> composite unit <plugin>
-    #   <cat>/<name>/SKILL.md                   -> standalone
-    #   <name>/SKILL.md                         -> standalone (rare)
     if len(parts) >= 4 and parts[-3] == "skills" and len(parts) == 4:
         return vendor_root / parts[0] / "skills" / parts[2], parts[2]
     if len(parts) >= 5 and parts[-3] == "skills":
@@ -94,7 +120,7 @@ def unit_for(skill_md: Path, vendor_root: Path):
 
 
 def collect_units():
-    units = {}  # unit_root -> dict
+    units = {}  # str(unit_root) -> dict
     for vendor_root, which in ((VENDOR_CS, "claude-skills"), (VENDOR_MP, "mattpocock-skills")):
         base = vendor_root if which == "claude-skills" else vendor_root / "skills"
         for smd in sorted(base.rglob("SKILL.md")):
@@ -106,83 +132,96 @@ def collect_units():
                 category = MP_CATEGORY_MAP.get(rel0, "misc")
             else:
                 if rel0 not in CS_CATEGORY_MAP:
-                    continue  # docs, templates, scripts, agents handled separately
+                    continue
                 unit_root, unit_name = unit_for(smd, vendor_root)
                 category = CS_CATEGORY_MAP[rel0]
             u = units.setdefault(str(unit_root), {
-                "root": unit_root, "name": unit_name, "source": which,
-                "category": category, "skill_mds": [],
+                "root": unit_root, "src_root": vendor_root, "name": unit_name,
+                "source": which, "category": category, "skill_mds": [],
+            })
+            u["skill_mds"].append(smd)
+    for ex in EXTRA_SOURCES:
+        base = ex["root"] / "skills"
+        if not base.exists():
+            print(f"WARNING: extra source missing, skipped: {base}")
+            continue
+        for smd in sorted(base.rglob("SKILL.md")):
+            top = smd.relative_to(base).parts[0]
+            if ex["include"] is not None and top not in ex["include"]:
+                continue
+            unit_root = base / top
+            u = units.setdefault(str(unit_root), {
+                "root": unit_root, "src_root": ex["root"], "name": top,
+                "source": ex["source"], "category": ex["category"], "skill_mds": [],
             })
             u["skill_mds"].append(smd)
     return list(units.values())
+
+
+ORIGINAL_AUTHOR_ORDER = {"mattpocock-skills": 0, "superpowers": 1, "anthropic-skills": 2,
+                         "claude-skills": 3}
 
 
 def main():
     if OUT_SKILLS.exists():
         shutil.rmtree(OUT_SKILLS)
     units = collect_units()
-    log, index, taken = [], [], {}  # taken: (category, name) -> unit
-    # Sort: mattpocock first so his originals win ties; then by name.
-    units.sort(key=lambda u: (u["source"] != "mattpocock-skills", u["name"]))
+    log, index, taken = [], [], {}
+    # Original authors first so their copies win ties; then by name.
+    units.sort(key=lambda u: (ORIGINAL_AUTHOR_ORDER.get(u["source"], 9), u["name"]))
 
     by_name = {}
     for u in units:
         by_name.setdefault(u["name"], []).append(u)
 
     for u in units:
-        rel_unit = ("claude-skills/" if u["source"] == "claude-skills" else "mattpocock-skills/") + str(u["root"].relative_to(VENDOR_CS if u["source"] == "claude-skills" else VENDOR_MP))
-        cs_rel = "/".join(rel_unit.split("/")[1:])  # strip repo prefix
+        rel_unit = f'{u["source"]}/{u["root"].relative_to(u["src_root"])}'
+        src_rel = str(u["root"].relative_to(u["src_root"]))
         name, cat, src = u["name"], u["category"], u["source"]
 
+        if name in FIXTURE_UNITS:
+            log.append(f"- SKIP `{rel_unit}` — upstream test fixture, not a skill")
+            continue
         if src == "claude-skills" and name in CS_STALE_FORKS:
             log.append(f"- SKIP `{rel_unit}` — stale fork of mattpocock's `{name}` (R2); kept the original author's current version")
             continue
-        if src == "claude-skills" and cs_rel in CS_SKIP_UNIT_PATHS:
-            log.append(f"- SKIP `{rel_unit}` — older small variant; kept richer `productivity/handoff` and mattpocock `workflow/handoff` (R3)")
+        if src == "claude-skills" and src_rel in CS_SKIP_UNIT_PATHS:
+            log.append(f"- SKIP `{rel_unit}` — expanded fork of mattpocock's `{name}`; original author's current version kept (R2)")
             continue
 
-        group = by_name[name]
-        if len(group) > 1:
-            mine = (u["skill_mds"][0].read_text(errors="replace"))
-            for other in group:
-                if other is u:
-                    continue
-                key = (other["category"], name)
-                if key in [(k[0], k[1]) for k in taken if k[1] == name]:
-                    theirs = other["skill_mds"][0].read_text(errors="replace")
-                    if hashlib.md5(mine.encode()).hexdigest() == hashlib.md5(theirs.encode()).hexdigest():
-                        # R1 byte-identical duplicate of an already-placed unit
-                        n_mine = sum(1 for _ in u["root"].rglob("*") if _.is_file())
-                        n_theirs = sum(1 for _ in other["root"].rglob("*") if _.is_file())
-                        if n_mine <= n_theirs:
-                            log.append(f"- SKIP `{rel_unit}` — byte-identical to kept `{other['category']}/{name}` (R1)")
-                            break
-            else:
-                pass
-            if any(l.endswith("(R1)") and f"`{rel_unit}`" in l for l in log):
+        # R1: byte-identical to an already-placed unit of the same name
+        skipped_r1 = False
+        for other_key, other in taken.items():
+            if other_key[1] != name:
                 continue
+            mine = u["skill_mds"][0].read_text(errors="replace")
+            theirs = other["skill_mds"][0].read_text(errors="replace")
+            if hashlib.md5(mine.encode()).hexdigest() == hashlib.md5(theirs.encode()).hexdigest():
+                log.append(f"- SKIP `{rel_unit}` — byte-identical to kept `{other_key[0]}/{name}` (R1)")
+                skipped_r1 = True
+                break
+        if skipped_r1:
+            continue
 
         dest = OUT_SKILLS / cat / name
         if dest.exists():
-            # same category+name from two sources and not identical -> keep first, log
             log.append(f"- SKIP `{rel_unit}` — name collision with already-kept `{cat}/{name}` (first-kept wins; review manually)")
             continue
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(u["root"], dest)
+        prior = [k for k in taken if k[1] == name]
+        if prior:
+            log.append(f"- KEEP BOTH `{cat}/{name}` and `{prior[0][0]}/{name}` — same name, different skills (R3)")
         taken[(cat, name)] = u
         n, d = fm(u["skill_mds"][0].read_text(errors="replace"))
-        sub = len(u["skill_mds"])
         index.append({
             "name": n or name, "category": cat, "path": f"skills/{cat}/{name}",
             "source": src, "description": d,
-            "composite": sub > 1, "sub_skills": sub,
-            "has_scripts": any((dest / p).exists() for p in ("scripts",)) or bool(list(dest.rglob("scripts"))),
+            "composite": len(u["skill_mds"]) > 1, "sub_skills": len(u["skill_mds"]),
+            "has_scripts": bool(list(dest.rglob("scripts"))),
         })
-        collide = [g for g in by_name[name] if g is not u and (g["category"], name) in taken]
-        if collide:
-            log.append(f"- KEEP BOTH `{cat}/{name}` and `{collide[0]['category']}/{name}` — same name, different skills (R3)")
 
-    # non-skill assets
+    # non-skill assets from claude-skills
     for src_dir, dst in (("agents", "agents"), ("commands", "commands"),
                          ("standards", "standards"), ("templates", "templates")):
         s = VENDOR_CS / src_dir
@@ -200,21 +239,44 @@ def main():
     lic.mkdir(exist_ok=True)
     shutil.copy2(VENDOR_CS / "LICENSE", lic / "LICENSE-claude-skills")
     shutil.copy2(VENDOR_MP / "LICENSE", lic / "LICENSE-mattpocock-skills")
+    for ex in EXTRA_SOURCES:
+        src_lic = ex["root"] / "LICENSE"
+        if src_lic.exists():
+            shutil.copy2(src_lic, lic / f"LICENSE-{ex['source']}")
+    # anthropic skills carry per-skill LICENSE.txt (Apache-2.0), retained by copytree
+
+    # provenance lock
+    lock = {}
+    roots = {"claude-skills": VENDOR_CS, "mattpocock-skills": VENDOR_MP}
+    roots.update({ex["source"]: ex["root"] for ex in EXTRA_SOURCES})
+    for src_name, root in roots.items():
+        try:
+            sha = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"],
+                                 capture_output=True, text=True, check=True).stdout.strip()
+            origin = subprocess.run(["git", "-C", str(root), "remote", "get-url", "origin"],
+                                    capture_output=True, text=True, check=True).stdout.strip()
+        except Exception:
+            sha, origin = "unknown", "unknown"
+        lock[src_name] = {"origin": origin, "commit": sha}
+    (ROOT / "sources.lock.json").write_text(json.dumps(lock, indent=2) + "\n")
 
     index.sort(key=lambda e: (e["category"], e["name"]))
     (ROOT / "skills-index.json").write_text(json.dumps(index, indent=2) + "\n")
 
-    kept = len(index)
     header = (
         "# Consolidation log\n\n"
-        f"Units kept: **{kept}** · decisions below. Rules: R1 byte-identical dedup · "
-        "R2 stale forks of original-author skills dropped · R3 same-name different-skill kept in "
-        "separate categories · R4 composite units kept intact (sub-skill name overlap is not a conflict).\n\n"
-        "Sources: alirezarezvani/claude-skills v2.9.0 (MIT) · mattpocock/skills (MIT). "
-        "mattpocock `deprecated/`, `in-progress/`, `personal/` excluded by policy.\n\n## Decisions\n\n"
+        f"Units kept: **{len(index)}** · decisions below. Rules: R1 byte-identical dedup · "
+        "R2 stale/expanded forks dropped in favor of the original author's current version · "
+        "R3 same-name different-skill kept in separate categories · R4 composite units kept "
+        "intact (sub-skill name overlap is not a conflict).\n\n"
+        "Sources (pinned in `sources.lock.json`): alirezarezvani/claude-skills (MIT) · "
+        "mattpocock/skills (MIT) · obra/superpowers (MIT) · anthropics/skills "
+        "(Apache-2.0 picks only — the source-available docx/pdf/pptx/xlsx skills are never "
+        "ingested). mattpocock `deprecated/`, `in-progress/`, `personal/` excluded by policy.\n\n"
+        "## Decisions\n\n"
     )
     (ROOT / "CONSOLIDATION.md").write_text(header + "\n".join(sorted(set(log))) + "\n")
-    print(f"kept units: {kept}; logged decisions: {len(set(log))}")
+    print(f"kept units: {len(index)}; logged decisions: {len(set(log))}")
     print(f"categories: {sorted({e['category'] for e in index})}")
 
 
