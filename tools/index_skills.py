@@ -98,7 +98,8 @@ def main():
     if idx_file.exists():
         for e in _json.loads(idx_file.read_text()):
             src_by_path[e["path"]] = e.get("source", "")
-    skill_files = sorted((LIB_ROOT / "skills").rglob("SKILL.md"))
+    skill_files = [f for f in sorted((LIB_ROOT / "skills").rglob("SKILL.md"))
+                   if not any(p in ("assets", "expected_outputs") for p in f.parts)]
     print(f"Indexing {len(skill_files)} SKILL.md files ...")
 
     points, indexed = [], 0
