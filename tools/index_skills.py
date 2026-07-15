@@ -92,15 +92,22 @@ def main():
         )
         print(f"Created collection '{COLLECTION}'")
 
-    skill_files = sorted((LIB_ROOT / "vendor").rglob("SKILL.md"))
+    import json as _json
+    src_by_path = {}
+    idx_file = LIB_ROOT / "skills-index.json"
+    if idx_file.exists():
+        for e in _json.loads(idx_file.read_text()):
+            src_by_path[e["path"]] = e.get("source", "")
+    skill_files = sorted((LIB_ROOT / "skills").rglob("SKILL.md"))
     print(f"Indexing {len(skill_files)} SKILL.md files ...")
 
     points, indexed = [], 0
     for f in skill_files:
         rel = f.relative_to(LIB_ROOT)
-        parts = rel.parts  # vendor / <repo> / <category> / ...
-        repo = parts[1]
-        category = parts[2] if len(parts) > 3 else ""
+        parts = rel.parts  # skills / <category> / <unit> / ...
+        category = parts[1]
+        unit_path = "/".join(parts[:3])
+        repo = src_by_path.get(unit_path, "")
         text = f.read_text(errors="replace")
         name, desc = parse_frontmatter(text)
         skill_dir = str(rel.parent)

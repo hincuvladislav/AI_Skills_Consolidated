@@ -1,50 +1,61 @@
-# Skills Library (consolidated)
+# AI Skills Consolidated
 
-One repo consolidating two agent-skills libraries for use by AI coding sessions on
-this machine (and as a curation source for the OwnTeam platform).
+A **deduplicated, single-tree** consolidation of two agent-skills libraries, restructured
+per current skill-repo best practices (one dir per skill unit, machine-readable index,
+progressive disclosure: `SKILL.md` ≤500 lines + `scripts/` + `references/` + `assets/`).
 
-| Source | Path | Skills | License |
-|---|---|---|---|
-| [alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) (via fork `extendaretail-vladislav-hincu/claude-skills`, v2.9.0) | `vendor/claude-skills/` | ~355 | MIT © 2025 Alireza Rezvani |
-| [mattpocock/skills](https://github.com/mattpocock/skills) | `vendor/mattpocock-skills/` | ~40 | MIT © 2026 Matt Pocock |
+| Source | License | Contribution |
+|---|---|---|
+| [alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) v2.9.0 (via fork) | MIT © 2025 Alireza Rezvani | broad library (engineering → C-level) |
+| [mattpocock/skills](https://github.com/mattpocock/skills) | MIT © 2026 Matt Pocock | composable engineering-workflow set |
 
-Total canonical `SKILL.md` files: **397** (platform-specific mirrors `.gemini/`,
-`.hermes/`, `.vibe/`, `.codex/` were excluded at consolidation time).
+**316 skill units · 370 SKILL.md files · 15 categories.** Duplicates resolved
+skill-by-skill — every decision is logged in [`CONSOLIDATION.md`](CONSOLIDATION.md)
+(rules: byte-identical dedup; stale forks dropped in favor of the original author's
+current version; same-name-different-skill kept in separate categories; composite
+skills kept intact).
 
 ## Layout
 
-- `vendor/claude-skills/` — broad library: `engineering/`, `engineering-team/`,
-  `product-team/`, `research/`, `project-management/`, `compliance-os/`,
-  `marketing-skill/`, `c-level-advisor/`, … plus `agents/` (99 personas),
-  `standards/`, `STORE.md` (index).
-- `vendor/mattpocock-skills/skills/` — small composable engineering-workflow skills:
-  `engineering/` (to-spec, to-tickets, implement, code-review, triage, wayfinder, tdd,
-  diagnosing-bugs, domain-modeling, …), `productivity/`, `misc/`.
-  Ignore `deprecated/` and `in-progress/`.
-- `tools/` — indexing & semantic search against the local Qdrant instance
-  (collection `skills`, Qdrant at `localhost:6357`).
+```
+skills/<category>/<unit>/     # one dir per skill unit (SKILL.md [+ scripts|references|assets])
+    engineering/  workflow/  product/  research/  research-ops/  project-management/
+    productivity/ business/  marketing/ finance/  compliance/  c-level/  ra-qm/
+    documents/    misc/
+agents/                       # 99 role personas
+commands/                     # slash-command definitions
+standards/                    # process standards (communication, quality, git, docs, security)
+templates/  docs/             # authoring standard & conventions
+tools/                        # consolidation, Qdrant indexing, semantic search
+skills-index.json             # machine-readable catalog: name·category·path·source·description
+CONSOLIDATION.md              # dedup decision log
+LICENSES/                     # upstream MIT notices (keep when redistributing)
+```
+
+Notes: `workflow/` is the mattpocock engineering set kept coherent (to-spec, to-tickets,
+implement, code-review, triage, wayfinder, tdd, diagnosing-bugs, domain-modeling, …).
+His `deprecated/`, `in-progress/`, `personal/` dirs were excluded by policy.
 
 ## Finding a skill
 
-- Keyword: `grep -ril "<topic>" vendor --include=SKILL.md`
-- Semantic: `tools/search_skills.sh "<what you're trying to do>"`
-- Human index: `vendor/claude-skills/STORE.md`, `vendor/mattpocock-skills/README.md`
+- **Catalog:** `skills-index.json` (or browse `skills/<category>/`)
+- **Keyword:** `grep -ril "<topic>" skills --include=SKILL.md`
+- **Semantic:** `tools/search_skills.sh "<what you're trying to do>"` — queries the
+  local Qdrant collection `skills` (localhost:6357, machine-local)
+
+## Maintenance
+
+- **Refresh from sources:** pull the source clones (`~/.claude/claude-skills`,
+  `~/.claude/mattpocock-skills`), then `python3 tools/consolidate.py` (rebuilds
+  `skills/`, `skills-index.json`, `CONSOLIDATION.md`; source paths overridable via
+  `SRC_CLAUDE_SKILLS` / `SRC_MP_SKILLS`).
+- **Re-index:** `<agents-venv-python> tools/index_skills.py --recreate`
+  (uses OpenAI `text-embedding-3-small`; key read from env or the Agents
+  infrastructure `.env`).
 
 ## Skill format
 
-agentskills.io convention: YAML frontmatter (`name`, `description` with trigger
-phrases) + markdown body; optional `scripts/` (Python, stdlib-only), `references/`,
-`assets/`.
-
-## Licensing
-
-Both sources are MIT; their license texts are retained at
-`vendor/claude-skills/LICENSE` and `vendor/mattpocock-skills/LICENSE`. Keep those
-notices when redistributing.
-
-## Updating from sources
-
-Source clones live at `~/.claude/claude-skills` (fork; `upstream` remote configured)
-and `~/.claude/mattpocock-skills`. Pull them, re-run the rsync consolidation
-(excluding `.git`, `.gemini`, `.hermes`, `.vibe`, `.codex`), then re-run
-`tools/index_skills.py`.
+agentskills.io convention — YAML frontmatter (`name`, `description` with trigger
+phrases) + markdown body; bundled Python tools are stdlib-only (single documented
+exception: `engineering/universal-scraping-architect`, deps declared in its
+requirements.txt). Authoring guide: `docs/SKILL-AUTHORING-STANDARD.md`.
